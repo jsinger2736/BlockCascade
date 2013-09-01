@@ -2,6 +2,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.util.ArrayList;
 
 public class Board extends JPanel implements ActionListener{
  int boardWidth = 20;
@@ -26,6 +27,9 @@ public class Board extends JPanel implements ActionListener{
  int levelPositionX;
  //int levelPositionY;
  BlockCascade blah;
+ ArrayList<Chaser> chaser = new ArrayList<Chaser>();
+ //Chaser chaser = new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this);
+ int maxLevel = 1;
  
  public Board(BlockCascade parent){
   setFocusable(true);
@@ -34,16 +38,34 @@ public class Board extends JPanel implements ActionListener{
   statusbar = parent.getStatusBar();
   addKeyListener(new TAdapter());
   clearBoard();  
-  piece1[boardHeight-2][(int)(boardWidth/2)]=1;
+  piece1[boardHeight-7][(int)(boardWidth/2)]=1;
   positionX1 = (int)(boardWidth/2);
-  positionY1 = boardHeight-2;
+  positionY1 = boardHeight-7;
   mode = 0;
   blah = parent;
+  start();
+  restart(0);
+  pause();
  }
 
  public void actionPerformed(ActionEvent e){
   if (numTurns%5==0){
    timer.setDelay(timer.getDelay()-1);
+   if (mode==0 && numTurns==0){
+    timer.setDelay(500);
+   }
+   for (int i=0; i<chaser.size(); i++){
+    if (mode!=1){
+     chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.78));
+    } else {
+     chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.6));
+     if (numTurns==5){
+      chaser.get(i).timer.start();
+     } else if (numTurns<5){
+      chaser.get(i).timer.stop();
+     }
+    }
+   }
   }
   nextTurn();
   numTurns++;
@@ -68,30 +90,63 @@ public class Board extends JPanel implements ActionListener{
   isPaused = !isPaused;
   if (isPaused){
    timer.stop();
-   statusbar.setText("paused");
+   for (int i=0; i<chaser.size(); i++){
+    chaser.get(i).timer.stop();
+   }
+   statusbar.setText("Press space to unpause");
   } else {
    timer.start();
+   for (int i=0; i<chaser.size(); i++){
+    chaser.get(i).timer.start();
+   }
    statusbar.setText(String.valueOf(numTurns));
   }
   repaint();
  }
 
+ public void restart(int modee, int levelo){
+  piece1[positionY1][positionX1]=0;
+  piece1[boardHeight-2][(int)(boardWidth/2)]=1;
+  positionY1=boardHeight-2;
+  positionX1=(int)(boardWidth/2);
+  levelPositionX = (int)(boardWidth*Math.random());
+  clearBoard();
+  for (int i=0; i<(int)(boardHeight/2.5); i++){
+   nextTurn();
+  }
+  numTurns=0;
+  level = levelo;
+  mode = 1;
+  player1 = true;
+  player2 = false;
+  isStarted = true;
+  timer.setDelay(time());
+  timer.start();
+  isPaused=false;
+  pause();
+ }
+
  public void restart(int modee){
-  if (modee==0){
+  chaser = new ArrayList<Chaser>();
+  if (modee==0){   //freeplay
    piece1[positionY1][positionX1]=0;
-   piece1[boardHeight-2][(int)(boardWidth/2)]=1;
-   positionY1=boardHeight-2;
+   piece1[boardHeight-7][(int)(boardWidth/2)]=1;
+   positionY1=boardHeight-7;
    positionX1=(int)(boardWidth/2);
    clearBoard();
    player1=true;
    player2=false;
    level=1;
+   isPaused=false;
    start();
+   for (int i=0; i<blah.numaiint; i++){
+    chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+   }
    mode = 0;
-  } else if (modee==1){
+  } else if (modee==1){ //classic
    piece1[positionY1][positionX1]=0;
-   piece1[boardHeight-2][(int)(boardWidth/2)]=1;
-   positionY1=boardHeight-2;
+   piece1[boardHeight-4][(int)(boardWidth/2)]=1;
+   positionY1=boardHeight-4;
    positionX1=(int)(boardWidth/2);
    levelPositionX = (int)(boardWidth*Math.random());
    clearBoard();
@@ -104,9 +159,13 @@ public class Board extends JPanel implements ActionListener{
    player1 = true;
    player2 = false;
    isStarted = true;
+   for (int i=0; i<blah.numaiint; i++){
+    chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+    chaser.get(i).timer.stop();
+   }
    timer.setDelay(time());
    timer.start();
-  } else if (modee==2){
+  } else if (modee==2){ //multiplayer race
    piece1[positionY1][positionX1]=0;
    piece1[boardHeight-2][(int)(2*boardWidth/3)]=1;
    positionY1=boardHeight-2;
@@ -130,7 +189,7 @@ public class Board extends JPanel implements ActionListener{
    mode = 2;
    timer.setDelay(time());
    timer.start();
-  } else if (modee==3){
+  } else if (modee==3){  //multiplayer freeplay
    piece1[positionY1][positionX1]=0;
    piece1[boardHeight-2][(int)(2*boardWidth/3)]=1;
    positionY1=boardHeight-2;
@@ -148,12 +207,26 @@ public class Board extends JPanel implements ActionListener{
    mode = 3;
    timer.setDelay(550);
    timer.start();
+  } else if (modee==4){ //currently nothing
+   piece1[positionY1][positionX1]=0;
+   piece1[boardHeight-2][(int)(boardWidth/2)]=1;
+   positionY1=boardHeight-2;
+   positionX1=(int)(boardWidth/2);
+   clearBoard();
+   player1=true;
+   player2=false;
+   level=1;
+   start();
+   mode = 0;////////////////////////////
   }
   isPaused = false;
+   for (int i=0; i<chaser.size(); i++){
+    chaser.get(i).timer.start();
+   }
  }
 
  public int time(){
-  if ((int)((1/level)*100+350-5*level)>50){
+  if ((int)((1/level)*200+350-5*level)>50){
    return (int)((1/level)*100+350-5*level);
   } else {
    return 50;
@@ -193,6 +266,7 @@ public class Board extends JPanel implements ActionListener{
      nextTurn();
     }
     numTurns=0;
+    maxLevel=level;
     return true;
    }
    return false;
@@ -253,6 +327,11 @@ public class Board extends JPanel implements ActionListener{
         piece2[i+1][j]=0;
        }
       }
+      for (int m=0; m<chaser.size(); m++){
+       if (chaser.get(m).position[1]==(i+1) && chaser.get(m).position[0]==j && (i+2)<boardHeight){
+        chaser.get(m).position[1]++;
+       }
+      }
       board[i+1][j]=1;
       board[i][j]=0;
      }
@@ -310,6 +389,23 @@ public class Board extends JPanel implements ActionListener{
   board = new int[boardHeight][boardWidth];
  }
 
+ public void aiGotcha(){
+  if (mode!=1 || numTurns>8){
+   for (int i=0; i<chaser.size(); i++){
+    if (positionX1==chaser.get(i).position[0] && positionY1==chaser.get(i).position[1]){
+     timer.stop();
+     board[positionY1][positionX1]=2;
+     if (player1){
+      statusbar.setText(statusbar.getText()+" game over!");
+     }
+     player1=false;
+     isStarted=false;
+     chaser.get(i).timer.stop();
+    }
+   }
+  }
+ }
+
  int squareWidth(){return (int) getSize().getWidth() / boardWidth;}
  int squareHeight(){return (int) getSize().getHeight() / boardHeight;}
 
@@ -328,6 +424,9 @@ public class Board extends JPanel implements ActionListener{
     if (board[i][j]==2){
      drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),2);
     }
+    for (int m=0; m<chaser.size(); m++){
+     drawSquare(g,0+chaser.get(m).position[0]*squareWidth(),boardTop+chaser.get(m).position[1]*squareHeight(),6);
+    }
     if (piece1[i][j]==1 && player1==true){
      drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),3);
     }
@@ -336,9 +435,12 @@ public class Board extends JPanel implements ActionListener{
     }
    }
   }
-  for (int j=0; j<boardWidth; j++){
-   if (board[boardHeight-1][j]==2){
-    drawSquare(g,0+j*squareWidth(),boardTop+(boardHeight-1)*squareHeight(),2);
+  aiGotcha();
+  for (int i=0; i<boardHeight; i++){
+   for (int j=0; j<boardWidth; j++){
+    if (board[i][j]==2){
+     drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),2);
+    }
    }
   }
  }
@@ -362,6 +464,8 @@ public class Board extends JPanel implements ActionListener{
    color = new Color(204,204,204);
   } else if (type==5){ //player2
    color = new Color(255,165,0);
+  } else if (type==6){ //chaser
+   color = new Color(0,0,0);
   }
   g.setColor(color);
   g.fillRect(x+1,y+1,squareWidth()-2,squareHeight()-2);
