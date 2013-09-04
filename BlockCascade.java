@@ -6,18 +6,19 @@ import javax.swing.*;
 public class BlockCascade extends JFrame{
  JMenuBar menubar;
  JMenu file, modes, multiplayer, options, extra;
- JMenuItem newgame, exit, campaign, race, msurvival, freeplay, chase, chooselevel, numai;
+ JMenuItem newgame, exit, campaign, race, msurvival, freeplay, chase, chooselevel, numchasers, numseekers;
  JCheckBoxMenuItem pushing;
  JLabel statusbar;
  MenuHandler menuHandler;
  Board board;
- int numaiint = 3;
+ int numChasers = 0;
+ int numSeekers = 0;
 
  public BlockCascade(){
   menubar = new JMenuBar();
   menuHandler = new MenuHandler();
   file = new JMenu("File");
-  newgame = new JMenuItem("New Game");
+  newgame = new JMenuItem("New Game (F1)");
   newgame.addActionListener(menuHandler);
   exit = new JMenuItem("Exit");
   exit.addActionListener(menuHandler);
@@ -45,10 +46,13 @@ public class BlockCascade extends JFrame{
   menubar.add(modes);
   options = new JMenu("Options");
   pushing = new JCheckBoxMenuItem("Pushing",false);
-  numai = new JMenuItem("Number of AI: 3");
-  numai.addActionListener(menuHandler);
+  numchasers = new JMenuItem("Number of Shadows: "+numChasers);
+  numchasers.addActionListener(menuHandler);
+  numseekers = new JMenuItem("Number of Pushers: "+numSeekers);
+  numseekers.addActionListener(menuHandler);
   options.add(pushing);
-  options.add(numai);
+  options.add(numchasers);
+  options.add(numseekers);
   menubar.add(options);
   extra = new JMenu("Extra");
   chooselevel = new JMenuItem("Choose Level");
@@ -101,14 +105,24 @@ public class BlockCascade extends JFrame{
      board.restart(1,(int)JOptionPane.showInputDialog(null,"Select the level in Classic that you'd like to jump to:","Level Selector",JOptionPane.PLAIN_MESSAGE,null,list,list[0]));
     } catch (Exception exception){
     }
-   } else if (source==numai){
+   } else if (source==numchasers){
     Object[] list = new Object[10];
     for (int i=0; i<10; i++){
      list[i]=i;
     }
     try{
-     numaiint = (int)JOptionPane.showInputDialog(null,"How many AI would you like to chase you?\nWill take effect when restarted.","Number of AI",JOptionPane.PLAIN_MESSAGE,null,list,list[numaiint]);
-     numai.setText("Number of AI: "+numaiint);
+     numChasers = (int)JOptionPane.showInputDialog(null,"How many Shadows would you like to have chase you?\nWill take effect when restarted.","Number of Shadows",JOptionPane.PLAIN_MESSAGE,null,list,list[numChasers]);
+     numchasers.setText("Number of Shadows: "+numChasers);
+    } catch (Exception exception){
+    }
+   } else if (source==numseekers){
+    Object[] list = new Object[10];
+    for (int i=0; i<10; i++){
+     list[i]=i;
+    }
+    try{
+     numSeekers = (int)JOptionPane.showInputDialog(null,"How many Shovers would you like to have chase you?\nWill take effect when restarted.","Number of Shovers",JOptionPane.PLAIN_MESSAGE,null,list,list[numSeekers]);
+     numseekers.setText("Number of Pushers: "+numSeekers);
     } catch (Exception exception){
     }
    }

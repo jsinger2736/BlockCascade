@@ -1,12 +1,11 @@
- import java.awt.event.*;
- import java.awt.*;
- import javax.swing.*;
+import java.awt.event.*;
+import java.awt.*;
+import javax.swing.*;
 
 public class Chaser implements ActionListener{
  int[] position = new int[2];
  Board parent;
  Timer timer;
- int switcher = 0;
 
  public Chaser(int[] positiono, Board parento){
   position=positiono;
@@ -16,7 +15,31 @@ public class Chaser implements ActionListener{
  }
 
  public void actionPerformed(ActionEvent e){
-  tryMove(new int[]{parent.positionX1,parent.positionY1});
+  int distance1, distance2;
+  distance1 = Math.abs(position[0]-parent.positionX1);
+  distance1 = distance1+Math.abs(position[1]-parent.positionY1);
+  distance2 = Math.abs(position[0]-parent.positionX2);
+  distance2 = distance2+Math.abs(position[1]-parent.positionY2);
+  if (parent.mode==2 || parent.mode==3){
+   if (!parent.player1 && !parent.player2){
+   } else if (!parent.player1){
+    distance1=200;
+   } else if (!parent.player2){
+    distance2=200;
+   }
+  }
+  if (distance1<distance2){
+   tryMove(new int[]{parent.positionX1,parent.positionY1});
+  } else if (distance2<distance1){
+   tryMove(new int[]{parent.positionX2,parent.positionY2});
+  } else {
+   if (Math.random()>.5){
+    tryMove(new int[]{parent.positionX1,parent.positionY1});
+   } else {
+    tryMove(new int[]{parent.positionX2,parent.positionY2});
+   }
+  }
+  //tryMove(new int[]{parent.positionX1,parent.positionY1});
  }
 
  public void tryMove(int[] target){
@@ -93,14 +116,14 @@ public class Chaser implements ActionListener{
     }
    }
   } else if (direction==2){
-   if ((position[0]+1)<parent.boardWidth-1){
+   if ((position[0]+1)<parent.boardWidth){
     if (board[position[1]][position[0]+1]!=1){
      position[0]++;
      return true;
     }
    }
   } else if (direction==3){
-   if ((position[1]+1)<parent.boardHeight-1){
+   if ((position[1]+1)<parent.boardHeight){
     if (board[position[1]+1][position[0]]!=1){
      position[1]++;
      return true;

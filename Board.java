@@ -22,13 +22,12 @@ public class Board extends JPanel implements ActionListener{
  int positionY2;
  boolean player1, player2;
  int score1, score2;
- int mode; //0 for freeplay. 1 for campaign. 2 for multiplayer.
+ int mode; //0 for freeplay. 1 for campaign. 2 for multiplayer race. 3 for multiplayer freeplay.
  int level = 1;
  int levelPositionX;
- //int levelPositionY;
  BlockCascade blah;
  ArrayList<Chaser> chaser = new ArrayList<Chaser>();
- //Chaser chaser = new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this);
+ ArrayList<Seeker> seeker = new ArrayList<Seeker>();
  int maxLevel = 1;
  
  public Board(BlockCascade parent){
@@ -51,20 +50,32 @@ public class Board extends JPanel implements ActionListener{
  public void actionPerformed(ActionEvent e){
   if (numTurns%5==0){
    timer.setDelay(timer.getDelay()-1);
-   if (mode==0 && numTurns==0){
-    timer.setDelay(500);
-   }
-   for (int i=0; i<chaser.size(); i++){
-    if (mode!=1){
-     chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.78));
-    } else {
-     chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.6));
-     if (numTurns==5){
-      chaser.get(i).timer.start();
-     } else if (numTurns<5){
-      chaser.get(i).timer.stop();
-     }
+  }
+  if (mode==0 && numTurns==0){
+   timer.setDelay(500);
+  }
+  for (int i=0; i<chaser.size(); i++){
+   if (mode!=1 && mode!=2){
+    chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.78));
+   } else {
+    chaser.get(i).timer.setDelay((int)(timer.getDelay()/1.6));
+    if (numTurns==5){
+     chaser.get(i).timer.start();
+    } else if (numTurns<5){
+     chaser.get(i).timer.stop();
     }
+   }
+  }
+  for (int i=0; i<seeker.size(); i++){
+   if (mode==1 || mode==2){
+    seeker.get(i).timer.setDelay((int)(timer.getDelay()/1.78));
+    if (numTurns==2){
+     seeker.get(i).timer.start();
+    } else if (numTurns<2){
+     seeker.get(i).timer.stop();
+    }
+   } else {
+    seeker.get(i).timer.setDelay((int)(timer.getDelay()/1.96));
    }
   }
   nextTurn();
@@ -93,11 +104,17 @@ public class Board extends JPanel implements ActionListener{
    for (int i=0; i<chaser.size(); i++){
     chaser.get(i).timer.stop();
    }
+   for (int i=0; i<seeker.size(); i++){
+    seeker.get(i).timer.stop();
+   }
    statusbar.setText("Press space to unpause");
   } else {
    timer.start();
    for (int i=0; i<chaser.size(); i++){
     chaser.get(i).timer.start();
+   }
+   for (int i=0; i<seeker.size(); i++){
+    seeker.get(i).timer.start();
    }
    statusbar.setText(String.valueOf(numTurns));
   }
@@ -105,6 +122,14 @@ public class Board extends JPanel implements ActionListener{
  }
 
  public void restart(int modee, int levelo){
+  for (int i=0; i<seeker.size(); i++){
+   seeker.get(i).timer.stop();
+  }
+  for (int i=0; i<chaser.size(); i++){
+   chaser.get(i).timer.stop();
+  }
+  chaser = new ArrayList<Chaser>();
+  seeker = new ArrayList<Seeker>();
   piece1[positionY1][positionX1]=0;
   piece1[boardHeight-2][(int)(boardWidth/2)]=1;
   positionY1=boardHeight-2;
@@ -120,6 +145,14 @@ public class Board extends JPanel implements ActionListener{
   player1 = true;
   player2 = false;
   isStarted = true;
+   for (int i=0; i<blah.numChasers; i++){
+    chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+    chaser.get(i).timer.stop();
+   }
+   for (int i=0; i<blah.numSeekers; i++){
+    seeker.add(new Seeker(new int[]{(int)(boardWidth/2),boardHeight-2},this,i%3));
+    seeker.get(i).timer.stop();
+   }
   timer.setDelay(time());
   timer.start();
   isPaused=false;
@@ -127,7 +160,14 @@ public class Board extends JPanel implements ActionListener{
  }
 
  public void restart(int modee){
+  for (int i=0; i<seeker.size(); i++){
+   seeker.get(i).timer.stop();
+  }
+  for (int i=0; i<chaser.size(); i++){
+   chaser.get(i).timer.stop();
+  }
   chaser = new ArrayList<Chaser>();
+  seeker = new ArrayList<Seeker>();
   if (modee==0){   //freeplay
    piece1[positionY1][positionX1]=0;
    piece1[boardHeight-7][(int)(boardWidth/2)]=1;
@@ -139,8 +179,11 @@ public class Board extends JPanel implements ActionListener{
    level=1;
    isPaused=false;
    start();
-   for (int i=0; i<blah.numaiint; i++){
+   for (int i=0; i<blah.numChasers; i++){
     chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+   }
+   for (int i=0; i<blah.numSeekers; i++){
+    seeker.add(new Seeker(new int[]{(int)(boardWidth/2),boardHeight-2},this,i%3));
    }
    mode = 0;
   } else if (modee==1){ //classic
@@ -159,9 +202,13 @@ public class Board extends JPanel implements ActionListener{
    player1 = true;
    player2 = false;
    isStarted = true;
-   for (int i=0; i<blah.numaiint; i++){
+   for (int i=0; i<blah.numChasers; i++){
     chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
     chaser.get(i).timer.stop();
+   }
+   for (int i=0; i<blah.numSeekers; i++){
+    seeker.add(new Seeker(new int[]{(int)(boardWidth/2),boardHeight-2},this,i%3));
+    seeker.get(i).timer.stop();
    }
    timer.setDelay(time());
    timer.start();
@@ -184,6 +231,22 @@ public class Board extends JPanel implements ActionListener{
    for (int i=0; i<(int)(boardHeight/2.5); i++){
     nextTurn();
    }
+   for (int i=0; i<blah.numChasers; i++){
+    if (Math.random()>.5){
+     chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+    } else {
+     chaser.add(new Chaser(new int[]{(int)(boardWidth/2)-1,boardHeight-2},this));
+    }
+    chaser.get(i).timer.stop();
+   }
+   for (int i=0; i<blah.numSeekers; i++){
+    if (Math.random()>.5){
+     seeker.add(new Seeker(new int[]{(int)(boardWidth/2),boardHeight-2},this,i%3));
+    } else {
+     seeker.add(new Seeker(new int[]{(int)(boardWidth/2)-1,boardHeight-2},this,i%3));
+    }
+    seeker.get(i).timer.stop();
+   }
    numTurns=0;
    level = 1;
    mode = 2;
@@ -205,6 +268,20 @@ public class Board extends JPanel implements ActionListener{
    numTurns=0;
    level = 1;
    mode = 3;
+   for (int i=0; i<blah.numChasers; i++){
+    if (Math.random()>.5){
+     chaser.add(new Chaser(new int[]{(int)(boardWidth/2),boardHeight-2},this));
+    } else {
+     chaser.add(new Chaser(new int[]{(int)(boardWidth/2)-1,boardHeight-2},this));
+    }
+   }
+   for (int i=0; i<blah.numSeekers; i++){
+    if (Math.random()>.5){
+     seeker.add(new Seeker(new int[]{(int)(boardWidth/2),boardHeight-2},this,i%3));
+    } else {
+     seeker.add(new Seeker(new int[]{(int)(boardWidth/2)-1,boardHeight-2},this,i%3));
+    }
+   }
    timer.setDelay(550);
    timer.start();
   } else if (modee==4){ //currently nothing
@@ -220,9 +297,12 @@ public class Board extends JPanel implements ActionListener{
    mode = 0;////////////////////////////
   }
   isPaused = false;
-   for (int i=0; i<chaser.size(); i++){
-    chaser.get(i).timer.start();
-   }
+  for (int i=0; i<chaser.size(); i++){
+   chaser.get(i).timer.start();
+  }
+  for (int i=0; i<seeker.size(); i++){
+   seeker.get(i).timer.start();
+  }
  }
 
  public int time(){
@@ -304,6 +384,11 @@ public class Board extends JPanel implements ActionListener{
         positionY1=i+2;
         piece1[i+1][j]=0;
        }
+       for (int m=0; m<seeker.size(); m++){
+        if (seeker.get(m).position[0]==j && seeker.get(m).position[1]==i+2 && i+3<boardHeight){
+         seeker.get(m).position[1]++;
+        }
+       }
       }
       if (piece2[i+1][j]==1 && i!=(boardHeight-2) && player2){
        if (player1){
@@ -330,6 +415,11 @@ public class Board extends JPanel implements ActionListener{
       for (int m=0; m<chaser.size(); m++){
        if (chaser.get(m).position[1]==(i+1) && chaser.get(m).position[0]==j && (i+2)<boardHeight){
         chaser.get(m).position[1]++;
+       }
+      }
+      for (int m=0; m<seeker.size(); m++){
+       if (seeker.get(m).position[1]==(i+1) && seeker.get(m).position[0]==j && (i+2)<boardHeight){
+        seeker.get(m).position[1]++;
        }
       }
       board[i+1][j]=1;
@@ -390,9 +480,39 @@ public class Board extends JPanel implements ActionListener{
  }
 
  public void aiGotcha(){
-  if (mode!=1 || numTurns>8){
+  if ((mode!=1 && mode!=2) || numTurns>8){
    for (int i=0; i<chaser.size(); i++){
     if (positionX1==chaser.get(i).position[0] && positionY1==chaser.get(i).position[1]){
+     if (isStarted){
+      board[positionY1][positionX1]=2;
+      player1=false;
+     }
+     if (mode!=2 || !player2){
+      timer.stop();
+      if (player1 && isStarted){
+       statusbar.setText(statusbar.getText()+" game over!");
+      }
+      isStarted=false;
+      chaser.get(i).timer.stop();
+     }
+    }
+    if (positionX2==chaser.get(i).position[0] && positionY2==chaser.get(i).position[1]){
+     if (isStarted){
+      board[positionY2][positionX2]=2;
+      player2=false;
+     }
+     if (mode!=2 || !player1){
+      timer.stop();
+      if (player2 && isStarted){
+       statusbar.setText(statusbar.getText()+" game over!");
+      }
+      isStarted=false;
+      chaser.get(i).timer.stop();
+     }
+    }
+   }
+   /*for (int i=0; i<seeker.size(); i++){
+    if (positionX1==seeker.get(i).position[0] && positionY1==seeker.get(i).position[1]){
      timer.stop();
      board[positionY1][positionX1]=2;
      if (player1){
@@ -400,9 +520,9 @@ public class Board extends JPanel implements ActionListener{
      }
      player1=false;
      isStarted=false;
-     chaser.get(i).timer.stop();
+     seeker.get(i).timer.stop();
     }
-   }
+   }*/
   }
  }
 
@@ -416,16 +536,19 @@ public class Board extends JPanel implements ActionListener{
   if (mode==1 || mode==2){
    drawSquare(g,0+levelPositionX*squareWidth(),boardTop+(1)*squareHeight(),4);
   }
+  for (int m=0; m<seeker.size(); m++){
+   drawSquare(g,0+seeker.get(m).position[0]*squareWidth(),boardTop+seeker.get(m).position[1]*squareHeight(),7);
+  }
+  for (int m=0; m<chaser.size(); m++){
+   drawSquare(g,0+chaser.get(m).position[0]*squareWidth(),boardTop+chaser.get(m).position[1]*squareHeight(),6);
+  }
   for (int i=0; i<boardHeight; ++i){
    for (int j=0; j<boardWidth; ++j){
     if (board[i][j]==1){
-     drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),1);
+     drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),1,i,j);
     }
     if (board[i][j]==2){
      drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),2);
-    }
-    for (int m=0; m<chaser.size(); m++){
-     drawSquare(g,0+chaser.get(m).position[0]*squareWidth(),boardTop+chaser.get(m).position[1]*squareHeight(),6);
     }
     if (piece1[i][j]==1 && player1==true){
      drawSquare(g,0+j*squareWidth(),boardTop+i*squareHeight(),3);
@@ -446,12 +569,6 @@ public class Board extends JPanel implements ActionListener{
  }
 
  private void drawSquare(Graphics g, int x, int y, int type){
-  /*Color colors[] = {new Color(0,0,0), new Color(204,102,102),
-   new Color(102,204,102),new Color(102,102,204),
-   new Color(204,204,102),new Color(204,102,204),
-   new Color(102,204,204),new Color(218,170,0)
-  };
-  Color color = colors[shape.ordinal()];*/
   Color color;
   color = new Color(0,0,0);
   if (type==1){ //falling blocks
@@ -466,6 +583,8 @@ public class Board extends JPanel implements ActionListener{
    color = new Color(255,165,0);
   } else if (type==6){ //chaser
    color = new Color(0,0,0);
+  } else if (type==7){ //seeker
+   color = new Color(80,80,50);
   }
   g.setColor(color);
   g.fillRect(x+1,y+1,squareWidth()-2,squareHeight()-2);
@@ -475,6 +594,101 @@ public class Board extends JPanel implements ActionListener{
   g.setColor(color.darker());
   g.drawLine(x+1,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
   g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y+1);
+ }
+
+ private void drawSquare(Graphics g, int x, int y, int type, int i, int j){
+  Color color;
+  color = new Color(0,0,0);
+  if (type==1){ //falling blocks
+   color = new Color(82,204,82);//102,204,102);
+  } else if (type==2){ //dead
+   color = new Color(204,51,51);
+  } else if (type==3){ //player1
+   color = new Color(102,51,204);
+  } else if (type==4){ //portal
+   color = new Color(204,204,204);
+  } else if (type==5){ //player2
+   color = new Color(255,165,0);
+  } else if (type==6){ //chaser
+   color = new Color(0,0,0);
+  } else if (type==7){ //seeker
+   color = new Color(80,80,50);
+  }
+  g.setColor(color);
+  g.fillRect(x+1,y+1,squareWidth()-2,squareHeight()-2);
+  g.setColor(color.brighter());
+  try{
+   if (board[i][j-1]!=1){
+    g.drawLine(x,y+squareHeight()-1,x,y);
+   } else {
+    g.setColor(color);
+    g.drawLine(x,y+squareHeight()-1,x,y);
+    g.setColor(color.brighter());
+   }
+  } catch (Exception e){
+   g.drawLine(x,y+squareHeight()-1,x,y); 
+  }
+  try{
+   if (board[i-1][j]!=1){
+    g.drawLine(x,y,x+squareWidth()-1,y);
+   } else {
+    g.setColor(color);
+    g.drawLine(x,y,x+squareWidth()-1,y);
+    g.setColor(color.brighter());
+   }
+  } catch (Exception e){
+   g.drawLine(x,y,x+squareWidth()-1,y);
+  }
+  g.setColor(color.darker());
+  try{
+   if (board[i+1][j]!=1){
+    g.drawLine(x,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
+   } else {
+    g.setColor(color);
+    g.drawLine(x+1,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
+    g.setColor(color.darker());
+   }
+  } catch (Exception e){
+   g.drawLine(x+1,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
+  }
+  try{
+   if (board[i][j+1]!=1){
+    g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y);
+   } else {
+    g.setColor(color);
+    g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y+1);
+    g.setColor(color.darker());
+   }
+  } catch (Exception e){
+   g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y+1);
+  }
+  try{
+   if (board[i+1][j]!=1){
+    g.setColor(color.darker());
+    g.drawLine(x,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
+   }
+  } catch (Exception e){
+    g.setColor(color.darker());
+    g.drawLine(x,y+squareHeight()-1,x+squareWidth()-1,y+squareHeight()-1);
+  }/*
+  try{
+   if (board[1][j+1]!=1){
+    g.setColor(color.darker());
+    g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y);
+   }
+  } catch (Exception e){
+    g.setColor(color.darker());
+    g.drawLine(x+squareWidth()-1,y+squareHeight()-1,x+squareWidth()-1,y);
+  }*/
+  try{
+   if (board[i][j-1]!=1){
+    g.setColor(color.brighter());
+    g.drawLine(x,y+squareHeight()-1,x,y);
+   }
+  } catch (Exception e){
+   g.setColor(color.brighter());
+   g.drawLine(x,y+squareHeight()-1,x,y);
+  }
  }
  
  private void tryMove(int direction, int player){
@@ -642,10 +856,14 @@ public class Board extends JPanel implements ActionListener{
  
  class TAdapter extends KeyAdapter{
   public void keyPressed(KeyEvent e){
+   int keycode = e.getKeyCode();
+   if (keycode==KeyEvent.VK_F1){
+    restart(mode);
+    pause();
+   }
    if (!isStarted){
     return;
    }
-   int keycode = e.getKeyCode();
    if (keycode=='P' || keycode=='p' || keycode==' '){
     pause();
    }
