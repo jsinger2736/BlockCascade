@@ -584,7 +584,7 @@ public class Board extends JPanel implements ActionListener{
   } else if (type==6){ //chaser
    color = new Color(0,0,0);
   } else if (type==7){ //seeker
-   color = new Color(80,80,50);
+   color = new Color(102,102,102);
   }
   g.setColor(color);
   g.fillRect(x+1,y+1,squareWidth()-2,squareHeight()-2);

@@ -60,7 +60,7 @@ public class Seeker implements ActionListener{
   }
   if (type==0){ //tries to push down
    if (position[0]==target[0] && position[1]==target[1]-1){
-   } else if (parent.board[target[1]-1][target[0]]==1){
+   } else if (target[1]-1>=0 && parent.board[target[1]-1][target[0]]==1){
    } else if (position[0]==target[0] && position[1]==target[1]+1){
     if (Math.random()>.49){
      target[0]--;
@@ -69,10 +69,10 @@ public class Seeker implements ActionListener{
      target[0]++;
      target[1]++;
     }
-   } else if ((position[0]==target[0]-1 && position[1]==target[1]+1) || (position[0]==target[0]-1 && position[1]==target[1])){
+   } else if ((position[0]==target[0]-1 && position[1]==target[1]+1) || (position[0]==target[0]-1 && position[1]==target[1]) && parent.board[target[1]][target[0]-1]!=1 && parent.board[target[1]-1][target[0]-1]!=1){
     target[0]--;
     target[1]--;
-   } else if ((position[0]==target[0]+1 && position[1]==target[1]+1) || (position[0]==target[0]+1 && position[1]==target[1])){
+   } else if ((position[0]==target[0]+1 && position[1]==target[1]+1) || (position[0]==target[0]+1 && position[1]==target[1]) && parent.board[target[1]][target[0]+1]!=1 && parent.board[target[1]-1][target[0]+1]!=1){
     target[0]++;
     target[1]--;
    } else {
@@ -122,7 +122,7 @@ public class Seeker implements ActionListener{
   if (path.get(0)==1){
    //System.out.println("UP");
    if (curTarget==1){
-    if (position[1]-1>1 && parent.player1){
+    if (position[1]-1>0 && parent.player1){
      if (parent.positionX1==position[0] && parent.positionY1==position[1]-1){
       if (position[1]-2>1 && parent.board[position[1]-2][position[0]]!=1 && !(parent.positionX2==position[0] && parent.positionY2==position[1]-2 && parent.player2)){
        parent.piece1[parent.positionY1][parent.positionX1]=0;
@@ -135,7 +135,7 @@ public class Seeker implements ActionListener{
      }
     }
    } else if (curTarget==2){
-    if (position[1]-1>1 && parent.player2){
+    if (position[1]-1>0 && parent.player2){
      if (parent.positionX2==position[0] && parent.positionY2==position[1]-1){
       if (position[1]-2>1 && parent.board[position[1]-2][position[0]]!=1 && !(parent.positionX1==position[0] && parent.positionY1==position[1]-2 && parent.player2)){
        parent.piece2[parent.positionY2][parent.positionX2]=0;
